@@ -1,0 +1,54 @@
+name: Kodi skin packaging
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Dede TV skin sources
+        uses: actions/checkout@v4
+        with:
+          path: dede
+      - name: Checkout upstream Estuary in our Kodi fork
+        uses: actions/checkout@v4
+        with:
+          repository: MikailGtheG/xbmc
+          ref: master
+          path: kodi
+          sparse-checkout: |
+            addons/skin.estuary
+          sparse-checkout-cone-mode: false
+      - name: Compile and build derivative skin
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile dede/scripts/build_skin.py
+          python3 dede/scripts/build_skin.py \
+            kodi/addons/skin.estuary dede/dist/skin.dede-tv
+      - name: Verify required Kodi XML windows and branding
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import xml.etree.ElementTree as ET
+          from pathlib import Path
+          base=Path("dede/dist/skin.dede-tv")
+          addon=ET.parse(base/"addon.xml").getroot()
+          assert addon.attrib["id"]=="skin.dede-tv"
+          assert addon.attrib["name"].startswith("Dede TV")
+          for name in ["Home.xml","VideoFullScreen.xml","DialogPVRChannelsOSD.xml"]:
+              ET.parse(base/"xml"/name)
+          pvr=ET.parse(base/"xml"/"DialogPVRChannelsOSD.xml").getroot()
+          assert pvr.find(".//control[@id='11']") is not None
+          assert (base/"LICENSE.txt").is_file()
+          PY
+          tar -C dede/dist -czf dede/dede-tv-skin-prototype.tar.gz skin.dede-tv
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dede-tv-skin-prototype
+          path: dede/dede-tv-skin-prototype.tar.gz
+          retention-days: 3
+          if-no-files-found: error
