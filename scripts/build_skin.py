@@ -63,6 +63,36 @@ def build(upstream: Path, destination: Path) -> None:
                         "<focusposition>2</focusposition>")
     xml = replace_exact(xml, '<scrolltime tween="cubic" easing="out">500</scrolltime>',
                         '<scrolltime tween="cubic" easing="out">200</scrolltime>')
+    # Dede TV palette: restrained silver on charcoal, without Estuary's blue.
+    # Keep the original color names because hundreds of skin XML bindings
+    # refer to them; change values rather than breaking those references.
+    palette = {
+        "primary_background": "FF17191C",
+        "secondary_background": "CC292D32",
+        "dialog_tint": "FF202328",
+        "dialog_header_tint": "FF343941",
+        "background": "FF101114",
+        "bg_image": "FF70757C",
+        "bg_overlay": "22000000",
+        "white": "FFF4F5F6",
+        "grey": "FFB8BDC5",
+        "blue": "FFD5D9DF",
+        "button_focus": "FFE1E5EA",
+        "button_alt_focus": "80E1E5EA",
+        "selected": "FFE1E5EA",
+    }
+    colors_path = destination / "colors" / "defaults.xml"
+    colors_tree = ET.parse(colors_path)
+    colors_root = colors_tree.getroot()
+    for node in colors_root.findall("color"):
+        name = node.get("name")
+        if name in palette:
+            node.text = palette[name]
+    missing = palette.keys() - {node.get("name") for node in colors_root.findall("color")}
+    if missing:
+        raise ValueError(f"upstream Estuary colors missing: {sorted(missing)}")
+    colors_tree.write(colors_path, encoding="utf-8", xml_declaration=True)
+
     # Preserve XML parseability and the original property expressions.
     ET.fromstring(xml)
     popup.write_text(xml, encoding="utf-8")
