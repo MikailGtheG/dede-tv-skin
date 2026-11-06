@@ -56,9 +56,9 @@ def build(upstream: Path, destination: Path) -> None:
     # PVRListItemLayouts) while reducing obstruction of the playing video.
     popup = destination / "xml" / "DialogPVRChannelsOSD.xml"
     xml = popup.read_text(encoding="utf-8")
-    xml = replace_exact(xml, 'name="width" value="1042"', 'name="width" value="680"')
-    xml = replace_exact(xml, "<width>970</width>", "<width>610</width>")
-    xml = replace_exact(xml, "<left>970</left>", "<left>610</left>")
+    xml = replace_exact(xml, 'name="width" value="1042"', 'name="width" value="800"')
+    xml = replace_exact(xml, "<width>970</width>", "<width>720</width>")
+    xml = replace_exact(xml, "<left>970</left>", "<left>720</left>")
     xml = replace_exact(xml, "<focusposition>4</focusposition>",
                         "<focusposition>2</focusposition>")
     xml = replace_exact(xml,
@@ -80,9 +80,9 @@ def build(upstream: Path, destination: Path) -> None:
         "white": "FFF4F5F6",
         "grey": "FFB8BDC5",
         "blue": "FFD5D9DF",
-        "button_focus": "FFE1E5EA",
-        "button_alt_focus": "80E1E5EA",
-        "selected": "FFE1E5EA",
+        "button_focus": "FFF1E4D9",
+        "button_alt_focus": "80F1E4D9",
+        "selected": "FFF1E4D9",
     }
     colors_path = destination / "colors" / "defaults.xml"
     colors_tree = ET.parse(colors_path)
