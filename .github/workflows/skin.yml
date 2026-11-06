@@ -48,15 +48,15 @@ jobs:
           assert (base/"LICENSE.txt").is_file()
           # Verify the intended remote-control layout rather than XML syntax alone.
           overlay=(base/"xml"/"DialogPVRChannelsOSD.xml").read_text()
-          assert 'name="width" value="680"' in overlay
-          assert "<width>610</width>" in overlay
+          assert 'name="width" value="800"' in overlay
+          assert "<width>720</width>" in overlay
           assert "<focusposition>2</focusposition>" in overlay
           assert "<label>DEDE TV  |  SENDER</label>" in overlay
           assert '<scrolltime tween="cubic" easing="out">200</scrolltime>' in overlay
           colors=ET.parse(base/"colors"/"defaults.xml").getroot()
           color_map={n.get("name"):n.text for n in colors.findall("color")}
           assert color_map["blue"]=="FFD5D9DF"
-          assert color_map["button_focus"]=="FFE1E5EA"
+          assert color_map["button_focus"]=="FFF1E4D9"
           assert color_map["primary_background"]=="FF17191C"
           # Build must keep upstream Estuary untouched.
           original=ET.parse(Path("kodi/addons/skin.estuary/addon.xml")).getroot()
