@@ -60,6 +60,16 @@ jobs:
           # Build must keep upstream Estuary untouched.
           original=ET.parse(Path("kodi/addons/skin.estuary/addon.xml")).getroot()
           assert original.get("id")=="skin.estuary"
+          home=ET.parse(base/"xml"/"Home.xml").getroot()
+          controls=home.findall(".//control")
+          assert len(controls) <= 8, "Stock Estuary home elements leaked into TV-first home"
+          actions=[v.text for v in home.findall(".//onclick")]
+          assert "ActivateWindow(TVChannels)" in actions
+          labels=[x.text for x in home.findall(".//label")]
+          assert "DEDE TV" in labels
+          assert "Live-TV und Sender" in labels
+          assert home.findtext("backgroundcolor") == "background"
+          assert not any("ActivateWindow(Settings)" in (a or "") for a in actions)
           PY
           tar -C dede/dist -czf dede/dede-tv-skin-prototype.tar.gz skin.dede-tv
       - uses: actions/upload-artifact@v4
