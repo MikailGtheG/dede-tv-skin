@@ -99,6 +99,25 @@ def build(upstream: Path, destination: Path) -> None:
         raise ValueError(f"upstream Estuary colors missing: {sorted(missing)}")
     colors_tree.write(colors_path, encoding="utf-8", xml_declaration=True)
 
+    # Kodi on Linux resolves some font paths using lowercase file names.
+    # Estuary's XML uses mixed-case font filenames; the older runtime emits
+    # GUIFontManager::LoadTTF errors for lowercase paths. Bundle both spellings
+    # without modifying the upstream files or font licenses.
+    fonts_dir = destination / "fonts"
+    font_aliases = {
+        "NotoSans-Regular.ttf": "notosans-regular.ttf",
+        "NotoMono-Regular.ttf": "notomono-regular.ttf",
+        "Roboto-Thin.ttf": "roboto-thin.ttf",
+    }
+    for original, alias in font_aliases.items():
+        source = fonts_dir / original
+        target = fonts_dir / alias
+        if not source.is_file() or source.stat().st_size < 1024:
+            raise FileNotFoundError(f"Missing bundled Kodi font: {source}")
+        if target.exists():
+            raise FileExistsError(f"Font alias already exists: {target}")
+        shutil.copyfile(source, target)
+
     # Replace the media-center home with a minimal TV-first launch surface.
     # The home is only a fallback: actual playback remains fullscreen and
     # takes precedence. Keep the original dialogs/includes for compatibility.
