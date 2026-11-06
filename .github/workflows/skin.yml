@@ -1,0 +1,92 @@
+name: Kodi skin packaging
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Dede TV skin sources
+        uses: actions/checkout@v4
+        with:
+          path: dede
+      - name: Checkout upstream Estuary in our Kodi fork
+        uses: actions/checkout@v4
+        with:
+          repository: xbmc/xbmc
+          # Match Debian 13's Kodi 21.2 Omega, never a moving master.
+          ref: d1a1d48c3cb3722d39264ffdd8132f755ffecd27
+          path: kodi
+          sparse-checkout: |
+            addons/skin.estuary
+          sparse-checkout-cone-mode: false
+      - name: Compile and build derivative skin
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git -C kodi rev-parse HEAD)" = 'd1a1d48c3cb3722d39264ffdd8132f755ffecd27'
+          python3 -m py_compile dede/scripts/build_skin.py
+          python3 dede/scripts/build_skin.py \
+            kodi/addons/skin.estuary dede/dist/skin.dede-tv
+      - name: Verify required Kodi XML windows and branding
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import xml.etree.ElementTree as ET
+          from pathlib import Path
+          base=Path("dede/dist/skin.dede-tv")
+          addon=ET.parse(base/"addon.xml").getroot()
+          assert addon.attrib["id"]=="skin.dede-tv"
+          assert addon.attrib["name"].startswith("Dede TV")
+          requires=addon.find("./requires/import[@addon='xbmc.gui']")
+          assert requires is not None and requires.get("version") == "5.17.0"
+
+          for name in ["Home.xml","VideoFullScreen.xml","DialogPVRChannelsOSD.xml"]:
+              ET.parse(base/"xml"/name)
+          pvr=ET.parse(base/"xml"/"DialogPVRChannelsOSD.xml").getroot()
+          assert pvr.find(".//control[@id='11']") is not None
+          assert (base/"LICENSE.txt").is_file()
+          for original, alias in (
+              ("NotoSans-Regular.ttf", "notosans-regular.ttf"),
+              ("NotoMono-Regular.ttf", "notomono-regular.ttf"),
+              ("Roboto-Thin.ttf", "roboto-thin.ttf"),
+          ):
+              a, b = base/"fonts"/original, base/"fonts"/alias
+              assert a.is_file() and b.is_file() and a.read_bytes() == b.read_bytes()
+
+          # Verify the intended remote-control layout rather than XML syntax alone.
+          overlay=(base/"xml"/"DialogPVRChannelsOSD.xml").read_text()
+          assert 'name="width" value="800"' in overlay
+          assert "<width>720</width>" in overlay
+          assert "<focusposition>2</focusposition>" in overlay
+          assert "<label>DEDE TV  |  SENDER</label>" in overlay
+          assert '<scrolltime tween="cubic" easing="out">200</scrolltime>' in overlay
+          colors=ET.parse(base/"colors"/"defaults.xml").getroot()
+          color_map={n.get("name"):n.text for n in colors.findall("color")}
+          assert color_map["blue"]=="FFD5D9DF"
+          assert color_map["button_focus"]=="FFF1E4D9"
+          assert color_map["primary_background"]=="FF17191C"
+          # Build must keep upstream Estuary untouched.
+          original=ET.parse(Path("kodi/addons/skin.estuary/addon.xml")).getroot()
+          assert original.get("id")=="skin.estuary"
+          home=ET.parse(base/"xml"/"Home.xml").getroot()
+          controls=home.findall(".//control")
+          assert len(controls) <= 8, "Stock Estuary home elements leaked into TV-first home"
+          actions=[v.text for v in home.findall(".//onclick")]
+          assert "ActivateWindow(TVChannels)" in actions
+          labels=[x.text for x in home.findall(".//label")]
+          assert "DEDE TV" in labels
+          assert "Live-TV und Sender" in labels
+          assert home.findtext("backgroundcolor") == "background"
+          assert not any("ActivateWindow(Settings)" in (a or "") for a in actions)
+          PY
+          tar -C dede/dist -czf dede/dede-tv-skin-prototype.tar.gz skin.dede-tv
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dede-tv-skin-prototype
+          path: dede/dede-tv-skin-prototype.tar.gz
+          retention-days: 3
+          if-no-files-found: error
