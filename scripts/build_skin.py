@@ -30,9 +30,13 @@ def build(upstream: Path, destination: Path) -> None:
     tree = ET.parse(manifest)
     addon = tree.getroot()
     addon.set("id", "skin.dede-tv")
-    addon.set("name", "Dede TV OS (Estuary base)")
+    addon.set("name", "Dede TV OS")
     addon.set("version", "0.1.0")
     addon.set("provider-name", "Dede TV OS contributors and upstream Estuary authors")
+    # Debian 13 ships Kodi 21.2 (Omega) and xbmc.gui ABI 5.17.0.
+    gui_reqs = addon.findall("./requires/import[@addon='xbmc.gui']")
+    if len(gui_reqs) != 1 or gui_reqs[0].get("version") != "5.17.0":
+        raise ValueError("Skin base must be Kodi 21.2 Omega (xbmc.gui 5.17.0)")
     metadata = addon.find("./extension[@point='xbmc.addon.metadata']")
     if metadata is not None:
         for child in list(metadata):
@@ -73,7 +77,6 @@ def build(upstream: Path, destination: Path) -> None:
         "primary_background": "FF17191C",
         "secondary_background": "CC292D32",
         "dialog_tint": "FF202328",
-        "dialog_header_tint": "FF343941",
         "background": "FF101114",
         "bg_image": "FF70757C",
         "bg_overlay": "22000000",
