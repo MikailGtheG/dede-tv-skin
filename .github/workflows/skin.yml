@@ -49,6 +49,14 @@ jobs:
           pvr=ET.parse(base/"xml"/"DialogPVRChannelsOSD.xml").getroot()
           assert pvr.find(".//control[@id='11']") is not None
           assert (base/"LICENSE.txt").is_file()
+          for original, alias in (
+              ("NotoSans-Regular.ttf", "notosans-regular.ttf"),
+              ("NotoMono-Regular.ttf", "notomono-regular.ttf"),
+              ("Roboto-Thin.ttf", "roboto-thin.ttf"),
+          ):
+              a, b = base/"fonts"/original, base/"fonts"/alias
+              assert a.is_file() and b.is_file() and a.read_bytes() == b.read_bytes()
+
           # Verify the intended remote-control layout rather than XML syntax alone.
           overlay=(base/"xml"/"DialogPVRChannelsOSD.xml").read_text()
           assert 'name="width" value="800"' in overlay
