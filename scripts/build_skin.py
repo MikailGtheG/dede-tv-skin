@@ -93,6 +93,67 @@ def build(upstream: Path, destination: Path) -> None:
         raise ValueError(f"upstream Estuary colors missing: {sorted(missing)}")
     colors_tree.write(colors_path, encoding="utf-8", xml_declaration=True)
 
+    # Replace the media-center home with a minimal TV-first launch surface.
+    # The home is only a fallback: actual playback remains fullscreen and
+    # takes precedence. Keep the original dialogs/includes for compatibility.
+    home = destination / "xml" / "Home.xml"
+    home.write_text("""<?xml version="1.0" encoding="UTF-8"?>
+<window>
+    <defaultcontrol always="true">9000</defaultcontrol>
+    <backgroundcolor>background</backgroundcolor>
+    <controls>
+        <control type="image">
+            <left>0</left>
+            <top>0</top>
+            <width>1920</width>
+            <height>1080</height>
+            <texture colordiffuse="FF17191C">colors/white.png</texture>
+        </control>
+        <control type="label">
+            <left>112</left>
+            <top>112</top>
+            <width>1200</width>
+            <height>90</height>
+            <font>font45</font>
+            <textcolor>white</textcolor>
+            <label>DEDE TV</label>
+        </control>
+        <control type="label">
+            <left>116</left>
+            <top>215</top>
+            <width>1300</width>
+            <height>65</height>
+            <font>font30</font>
+            <textcolor>grey</textcolor>
+            <label>Fernsehen, einfach einschalten.</label>
+        </control>
+        <control type="button" id="9000">
+            <left>112</left>
+            <top>420</top>
+            <width>800</width>
+            <height>125</height>
+            <font>font35</font>
+            <textcolor>white</textcolor>
+            <focusedcolor>white</focusedcolor>
+            <label>Live-TV und Sender</label>
+            <onclick>ActivateWindow(TVChannels)</onclick>
+            <onup>9000</onup>
+            <ondown>9000</ondown>
+        </control>
+        <control type="label">
+            <left>116</left>
+            <top>920</top>
+            <width>1600</width>
+            <height>60</height>
+            <font>font20</font>
+            <textcolor>grey</textcolor>
+            <label>OK: Senderliste öffnen</label>
+        </control>
+    </controls>
+</window>
+""", encoding="utf-8")
+    ET.parse(home)
+
     # Preserve XML parseability and the original property expressions.
     ET.fromstring(xml)
     popup.write_text(xml, encoding="utf-8")
