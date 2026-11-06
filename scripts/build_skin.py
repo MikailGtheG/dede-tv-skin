@@ -102,13 +102,6 @@ def build(upstream: Path, destination: Path) -> None:
     <defaultcontrol always="true">9000</defaultcontrol>
     <backgroundcolor>background</backgroundcolor>
     <controls>
-        <control type="image">
-            <left>0</left>
-            <top>0</top>
-            <width>1920</width>
-            <height>1080</height>
-            <texture colordiffuse="FF17191C">colors/white.png</texture>
-        </control>
         <control type="label">
             <left>112</left>
             <top>112</top>
