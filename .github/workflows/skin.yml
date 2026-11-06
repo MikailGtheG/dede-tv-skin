@@ -15,9 +15,9 @@ jobs:
       - name: Checkout upstream Estuary in our Kodi fork
         uses: actions/checkout@v4
         with:
-          repository: MikailGtheG/xbmc
-          # Pin Estuary to the exact tested Kodi base, not a moving branch.
-          ref: e3b0c18450bf8a6d9129642f4371a03c72371646
+          repository: xbmc/xbmc
+          # Match Debian 13's Kodi 21.2 Omega, never a moving master.
+          ref: d1a1d48c3cb3722d39264ffdd8132f755ffecd27
           path: kodi
           sparse-checkout: |
             addons/skin.estuary
@@ -26,7 +26,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git -C kodi rev-parse HEAD)" = 'e3b0c18450bf8a6d9129642f4371a03c72371646'
+          test "$(git -C kodi rev-parse HEAD)" = 'd1a1d48c3cb3722d39264ffdd8132f755ffecd27'
           python3 -m py_compile dede/scripts/build_skin.py
           python3 dede/scripts/build_skin.py \
             kodi/addons/skin.estuary dede/dist/skin.dede-tv
@@ -41,6 +41,9 @@ jobs:
           addon=ET.parse(base/"addon.xml").getroot()
           assert addon.attrib["id"]=="skin.dede-tv"
           assert addon.attrib["name"].startswith("Dede TV")
+          requires=addon.find("./requires/import[@addon='xbmc.gui']")
+          assert requires is not None and requires.get("version") == "5.17.0"
+
           for name in ["Home.xml","VideoFullScreen.xml","DialogPVRChannelsOSD.xml"]:
               ET.parse(base/"xml"/name)
           pvr=ET.parse(base/"xml"/"DialogPVRChannelsOSD.xml").getroot()
