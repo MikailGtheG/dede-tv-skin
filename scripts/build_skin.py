@@ -61,6 +61,9 @@ def build(upstream: Path, destination: Path) -> None:
     xml = replace_exact(xml, "<left>970</left>", "<left>610</left>")
     xml = replace_exact(xml, "<focusposition>4</focusposition>",
                         "<focusposition>2</focusposition>")
+    xml = replace_exact(xml,
+                        "<label>$VAR[BreadcrumbsPVRChannelsOSDVar]</label>",
+                        "<label>DEDE TV  |  SENDER</label>")
     xml = replace_exact(xml, '<scrolltime tween="cubic" easing="out">500</scrolltime>',
                         '<scrolltime tween="cubic" easing="out">200</scrolltime>')
     # Dede TV palette: restrained silver on charcoal, without Estuary's blue.
