@@ -51,6 +51,7 @@ jobs:
           assert 'name="width" value="680"' in overlay
           assert "<width>610</width>" in overlay
           assert "<focusposition>2</focusposition>" in overlay
+          assert "<label>DEDE TV  |  SENDER</label>" in overlay
           assert '<scrolltime tween="cubic" easing="out">200</scrolltime>' in overlay
           colors=ET.parse(base/"colors"/"defaults.xml").getroot()
           color_map={n.get("name"):n.text for n in colors.findall("color")}
