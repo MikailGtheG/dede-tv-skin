@@ -81,6 +81,15 @@ jobs:
               if label.get("type") == "label":
                   assert label.findtext("selectedcolor") == label.findtext("textcolor")
           top = ET.parse(base/"xml"/"Custom_1109_TopBarOverlay.xml").getroot()
+          assert top.get("id") == "1109" and top.get("type") == "dialog"
+          # Kodi groups boolean conditions with [ ], never ( ); only
+          # function calls like Window.IsActive(x) may use parentheses.
+          import re
+          for window in ("DialogPVRChannelsOSD.xml", "DialogSeekBar.xml", "VideoFullScreen.xml",
+                         "Home.xml", "Custom_1109_TopBarOverlay.xml", "DialogNotification.xml"):
+              for node in ET.parse(base/"xml"/window).getroot().iter("visible"):
+                  bare = re.sub(r"[A-Za-z.]+\([^()]*\)", "X", node.text or "")
+                  assert "(" not in bare and ")" not in bare, (window, node.text)
           assert top.findtext("visible") == "false" and not list(top.find("controls"))
           assert "$INFO[VideoPlayer.ChannelNumberLabel]" in full_labels
           assert "$INFO[VideoPlayer.ChannelName]" in full_labels

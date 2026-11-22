@@ -226,7 +226,7 @@ FULLSCREEN = f"""<?xml version="1.0" encoding="UTF-8"?>
 <window>
     <controls>
         <control type="group">
-            <visible>Player.Caching | (Player.HasMedia + !Player.HasVideo)</visible>
+            <visible>Player.Caching | [Player.HasMedia + !Player.HasVideo]</visible>
             <control type="image">
                 <left>660</left><top>480</top><width>600</width><height>120</height>
                 {_texture("pill.png", "D91C1D20")}
@@ -322,8 +322,9 @@ HOME = f"""<?xml version="1.0" encoding="UTF-8"?>
 
 # Estuary's clock/"ends at" bar over full-screen video.
 EMPTY_OVERLAY = """<?xml version="1.0" encoding="UTF-8"?>
-<!-- Dede TV: no media-center overlays over live TV. -->
-<window>
+<!-- Dede TV: no media-center overlays over live TV. Custom windows need
+     their id, or Kodi rejects the file. -->
+<window type="dialog" id="1109">
     <visible>false</visible>
     <controls />
 </window>
