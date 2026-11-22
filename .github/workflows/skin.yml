@@ -70,6 +70,8 @@ jobs:
           for texture in ("panel.png", "pill.png", "key.png", "line.png"):
               data = (base/"media"/"dede"/texture).read_bytes()
               assert data.startswith(b"\x89PNG\r\n\x1a\n"), texture
+          toast = ET.parse(base/"xml"/"DialogNotification.xml").getroot()
+          assert toast.findtext("visible") == "false" and not list(toast.find("controls"))
           full = ET.parse(base/"xml"/"VideoFullScreen.xml").getroot()
           full_labels = [x.text or "" for x in full.iter("label")]
           assert "$INFO[VideoPlayer.ChannelNumberLabel]" in full_labels

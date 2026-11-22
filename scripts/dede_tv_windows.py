@@ -251,7 +251,20 @@ HOME = f"""<?xml version="1.0" encoding="UTF-8"?>
 """
 
 
+# Kodi and add-on toasts ("Loaded 5 channels", update hints, PVR import
+# notices) are technical messages for a TV viewer. The window stays defined
+# so Kodi can open and close it, but renders nothing.
+NOTIFICATION = """<?xml version="1.0" encoding="UTF-8"?>
+<!-- Dede TV: technical Kodi/add-on toasts are never shown to viewers. -->
+<window>
+    <visible>false</visible>
+    <controls />
+</window>
+"""
+
+
 def write_windows(xml_dir: Path):
     (xml_dir / "DialogPVRChannelsOSD.xml").write_text(CHANNEL_LIST, encoding="utf-8")
     (xml_dir / "VideoFullScreen.xml").write_text(FULLSCREEN, encoding="utf-8")
     (xml_dir / "Home.xml").write_text(HOME, encoding="utf-8")
+    (xml_dir / "DialogNotification.xml").write_text(NOTIFICATION, encoding="utf-8")
