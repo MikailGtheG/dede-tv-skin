@@ -99,14 +99,19 @@ jobs:
           original=ET.parse(Path("kodi/addons/skin.estuary/addon.xml")).getroot()
           assert original.get("id")=="skin.estuary"
           home=ET.parse(base/"xml"/"Home.xml").getroot()
-          controls=home.findall(".//control")
-          assert len(controls) <= 8, "Stock Estuary home elements leaked into TV-first home"
-          actions=[v.text for v in home.findall(".//onclick")]
-          assert actions == ["ActivateWindow(PVROSDChannels)"]
-          labels=[x.text for x in home.findall(".//label")]
-          assert "DEDE TV" in labels
-          assert "Senderliste öffnen" in labels
+          # Home is the no-picture screen: its own PVR channel list (Kodi's
+          # channel-list dialog stays empty while nothing plays).
+          home_list = home.find(".//control[@id='50']")
+          assert home_list is not None and home_list.get("type") == "list"
+          assert home_list.findtext("content") == "pvr://channels/tv/*"
+          assert home.findtext("defaultcontrol") == "50"
+          assert home.findall(".//onclick") == [], "Home must not open Kodi windows"
+          labels=[x.text or "" for x in home.iter("label")]
+          assert "Fernsehen wird verbunden …" in labels
+          assert any("anderen Sender" in x for x in labels)
           assert home.findtext("backgroundcolor") == "background"
+          confirm=(base/"xml"/"DialogConfirm.xml").read_text()
+          assert "!String.IsEqual(Control.GetLabel(1),$LOCALIZE[16026])" in confirm
           PY
           tar -C dede/dist -czf dede/dede-tv-skin-prototype.tar.gz skin.dede-tv
       - uses: actions/upload-artifact@v4

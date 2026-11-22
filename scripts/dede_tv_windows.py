@@ -243,37 +243,77 @@ FULLSCREEN = f"""<?xml version="1.0" encoding="UTF-8"?>
 """
 
 
+# Home is the "no picture" screen: shown at power-on until the first channel
+# plays and whenever a channel cannot be played. Kodi's channel-list dialog
+# only fills while a channel plays, so Home carries its own channel list,
+# filled from the PVR database. Clicking a channel plays it (PlayMedia).
 HOME = f"""<?xml version="1.0" encoding="UTF-8"?>
-<!-- Shown only when no channel is playing (e.g. no IPTV source yet). -->
+<!-- Dede TV home: channel list + reconnect message when no picture plays. -->
 <window>
-    <defaultcontrol always="true">9000</defaultcontrol>
+    <defaultcontrol always="true">50</defaultcontrol>
     <backgroundcolor>background</backgroundcolor>
     <controls>
-        <control type="label">
-            <left>112</left><top>112</top><width>1200</width><height>90</height>
-            <font>font45</font><textcolor>white</textcolor>
-            <label>DEDE TV</label>
+        <control type="group">
+            <left>36</left>
+            <top>36</top>
+            <control type="image">
+                <left>0</left><top>0</top><width>820</width><height>1008</height>
+                {_texture("panel.png", PANEL)}
+            </control>
+            <control type="label">
+                <left>64</left><top>40</top><width>600</width><height>60</height>
+                <font>font32</font><textcolor>{TEXT}</textcolor>
+                <label>[B]Dede[/B] TV OS</label>
+            </control>
+            <control type="image">
+                <left>66</left><top>98</top><width>104</width><height>4</height>
+                {_texture("line.png", ACCENT)}
+            </control>
+            <control type="label">
+                <left>64</left><top>118</top><width>700</width><height>110</height>
+                <font>font52_title</font><textcolor>{TEXT}</textcolor>
+                <label>Sender</label>
+            </control>
+            <control type="list" id="50">
+                <left>30</left><top>248</top><width>760</width><height>672</height>
+                <onup>50</onup><ondown>50</ondown><onleft>50</onleft><onright>50</onright>
+                <scrolltime tween="linear">120</scrolltime>
+                <content target="pvr">pvr://channels/tv/*</content>
+                <itemlayout height="112" width="760">{_row(False)}
+                </itemlayout>
+                <focusedlayout height="112" width="760">{_row(True)}
+                </focusedlayout>
+            </control>
+            <control type="image">
+                <left>40</left><top>928</top><width>740</width><height>2</height>
+                {_texture("line.png", "33EDE6DC")}
+            </control>{_key_hint(48, 944, "▲ ▼", 84, "Auswählen")}{_key_hint(318, 944, "OK", 64, "Ansehen")}
         </control>
-        <control type="label">
-            <left>116</left><top>215</top><width>1300</width><height>65</height>
-            <font>font30_title</font><textcolor>grey</textcolor>
-            <label>Fernsehen, einfach einschalten.</label>
+        <control type="group">
+            <visible>PVR.HasTVChannels</visible>
+            <control type="label">
+                <left>1000</left><top>380</top><width>860</width><height>100</height>
+                <font>font52_title</font><textcolor>{TEXT}</textcolor>
+                <label>Fernsehen wird verbunden …</label>
+            </control>
+            <control type="textbox">
+                <left>1004</left><top>500</top><width>820</width><height>240</height>
+                <font>font30_title</font><textcolor>{TEXT_DIM}</textcolor>
+                <label>Bitte einen Moment Geduld, es wird automatisch erneut versucht.[CR][CR]Mit ▲ ▼ und OK können Sie auch einen anderen Sender wählen.</label>
+            </control>
         </control>
-        <control type="button" id="9000">
-            <left>112</left><top>420</top><width>800</width><height>125</height>
-            <font>font37</font><textcolor>white</textcolor><focusedcolor>{PILL_TEXT}</focusedcolor>
-            <texturefocus border="50" colordiffuse="{PILL}">dede/pill.png</texturefocus>
-            <texturenofocus border="50" colordiffuse="{PANEL}">dede/pill.png</texturenofocus>
-            <textoffsetx>48</textoffsetx>
-            <label>Senderliste öffnen</label>
-            <onclick>ActivateWindow(PVROSDChannels)</onclick>
-            <onup>9000</onup><ondown>9000</ondown><onleft>9000</onleft><onright>9000</onright>
-        </control>
-        <control type="label">
-            <left>116</left><top>920</top><width>1600</width><height>60</height>
-            <font>font27</font><textcolor>grey</textcolor>
+        <control type="group">
             <visible>!PVR.HasTVChannels</visible>
-            <label>Noch keine Sender eingerichtet. Bitte den Administrator kontaktieren.</label>
+            <control type="label">
+                <left>1000</left><top>380</top><width>860</width><height>100</height>
+                <font>font52_title</font><textcolor>{TEXT}</textcolor>
+                <label>Noch keine Sender</label>
+            </control>
+            <control type="textbox">
+                <left>1004</left><top>500</top><width>820</width><height>200</height>
+                <font>font30_title</font><textcolor>{TEXT_DIM}</textcolor>
+                <label>Die Senderliste wird gerade geladen oder ist noch nicht eingerichtet. Bitte den Administrator kontaktieren, falls dies so bleibt.</label>
+            </control>
         </control>
     </controls>
 </window>

@@ -63,6 +63,20 @@ def build(upstream: Path, destination: Path) -> None:
     # list Kodi's CGUIDialogPVRChannelsOSD binds to.
     write_windows(destination / "xml")
     write_textures(destination / "media")
+    # Kodi's modal "Playback failed" dialog (heading string 16026) is
+    # technical; dede-tv-guard closes it at once and Home explains the
+    # situation instead. Keep it invisible meanwhile. Other confirmation
+    # dialogs stay unchanged.
+    confirm = destination / "xml" / "DialogConfirm.xml"
+    confirm_xml = confirm.read_text(encoding="utf-8")
+    confirm_xml = replace_exact(
+        confirm_xml,
+        "\t\t<control type=\"group\">\n\t\t\t<height>400</height>",
+        "\t\t<control type=\"group\">\n"
+        "\t\t\t<visible>!String.IsEqual(Control.GetLabel(1),$LOCALIZE[16026])</visible>\n"
+        "\t\t\t<height>400</height>")
+    ET.fromstring(confirm_xml)
+    confirm.write_text(confirm_xml, encoding="utf-8")
     # Dede TV palette: restrained silver on charcoal, without Estuary's blue.
     # Keep the original color names because hundreds of skin XML bindings
     # refer to them; change values rather than breaking those references.
