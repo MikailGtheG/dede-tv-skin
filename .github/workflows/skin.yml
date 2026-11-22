@@ -72,8 +72,16 @@ jobs:
               assert data.startswith(b"\x89PNG\r\n\x1a\n"), texture
           toast = ET.parse(base/"xml"/"DialogNotification.xml").getroot()
           assert toast.findtext("visible") == "false" and not list(toast.find("controls"))
-          full = ET.parse(base/"xml"/"VideoFullScreen.xml").getroot()
+          full = ET.parse(base/"xml"/"DialogSeekBar.xml").getroot()
           full_labels = [x.text or "" for x in full.iter("label")]
+          # The playing channel's row is drawn with selectedcolor; it must
+          # stay readable on the light focus pill.
+          focused = pvr_list.find("focusedlayout")
+          for label in focused.iter("control"):
+              if label.get("type") == "label":
+                  assert label.findtext("selectedcolor") == label.findtext("textcolor")
+          top = ET.parse(base/"xml"/"Custom_1109_TopBarOverlay.xml").getroot()
+          assert top.findtext("visible") == "false" and not list(top.find("controls"))
           assert "$INFO[VideoPlayer.ChannelNumberLabel]" in full_labels
           assert "$INFO[VideoPlayer.ChannelName]" in full_labels
           # Every window this skin defines may only open the channel list.

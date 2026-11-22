@@ -109,12 +109,14 @@ def _row(focused):
     return f"""{pill}
                 <control type="label">
                     <left>48</left><top>6</top><width>110</width><height>100</height>
-                    <font>font45</font><textcolor>{color}</textcolor><aligny>center</aligny>
+                    <font>font45</font><textcolor>{color}</textcolor><selectedcolor>{color}</selectedcolor>
+                    <aligny>center</aligny>
                     <label>{bold[0]}$INFO[ListItem.ChannelNumberLabel]{bold[1]}</label>
                 </control>
                 <control type="label">
                     <left>170</left><top>6</top><width>560</width><height>100</height>
-                    <font>font45</font><textcolor>{color}</textcolor><aligny>center</aligny>
+                    <font>font45</font><textcolor>{color}</textcolor><selectedcolor>{color}</selectedcolor>
+                    <aligny>center</aligny>
                     <label>{bold[0]}$INFO[ListItem.Label]{bold[1]}</label>
                 </control>"""
 
@@ -167,12 +169,18 @@ CHANNEL_LIST = f"""<?xml version="1.0" encoding="UTF-8"?>
 """
 
 
-FULLSCREEN = f"""<?xml version="1.0" encoding="UTF-8"?>
-<!-- Dede TV full-screen TV: only a channel banner after switching. -->
+# Kodi shows the auto-visible DialogSeekBar window on Player.ShowInfo
+# (every channel switch), pause, seeking and channel-number entry. Estuary's
+# version is a full media-player bar; ours is only the channel banner.
+SEEKBAR = f"""<?xml version="1.0" encoding="UTF-8"?>
+<!-- Dede TV channel banner after switching: "03 | Kanal D" + OK hint. -->
 <window>
+    <visible>Window.IsActive(fullscreenvideo)</visible>
+    <visible>!Window.IsActive(pvrosdchannels)</visible>
+    <visible>Player.ShowInfo | !String.IsEmpty(PVR.ChannelNumberInput)</visible>
     <controls>
         <control type="group">
-            <visible>Player.ShowInfo + !Window.IsVisible(PVROSDChannels)</visible>
+            <visible>String.IsEmpty(PVR.ChannelNumberInput)</visible>
             <animation effect="fade" start="0" end="100" time="150">Visible</animation>
             <animation effect="fade" start="100" end="0" time="300">Hidden</animation>
             <control type="image">
@@ -196,6 +204,28 @@ FULLSCREEN = f"""<?xml version="1.0" encoding="UTF-8"?>
             </control>{_key_hint(800, 990, "OK", 64, "Senderliste")}
         </control>
         <control type="group">
+            <visible>!String.IsEmpty(PVR.ChannelNumberInput)</visible>
+            <control type="image">
+                <left>120</left><top>800</top><width>300</width><height>116</height>
+                {_texture("pill.png", "D91C1D20")}
+            </control>
+            <control type="label">
+                <left>120</left><top>800</top><width>300</width><height>116</height>
+                <font>font52_title</font><textcolor>{TEXT}</textcolor>
+                <align>center</align><aligny>center</aligny>
+                <label>$INFO[PVR.ChannelNumberInput]</label>
+            </control>
+        </control>
+    </controls>
+</window>
+"""
+
+
+FULLSCREEN = f"""<?xml version="1.0" encoding="UTF-8"?>
+<!-- Dede TV full-screen TV: picture only, plus a loading indicator. -->
+<window>
+    <controls>
+        <control type="group">
             <visible>Player.Caching | (Player.HasMedia + !Player.HasVideo)</visible>
             <control type="image">
                 <left>660</left><top>480</top><width>600</width><height>120</height>
@@ -208,7 +238,6 @@ FULLSCREEN = f"""<?xml version="1.0" encoding="UTF-8"?>
                 <label>Sender wird geladen …</label>
             </control>
         </control>
-        <include>PVRChannelNumberInput</include>
     </controls>
 </window>
 """
@@ -251,6 +280,15 @@ HOME = f"""<?xml version="1.0" encoding="UTF-8"?>
 """
 
 
+# Estuary's clock/"ends at" bar over full-screen video.
+EMPTY_OVERLAY = """<?xml version="1.0" encoding="UTF-8"?>
+<!-- Dede TV: no media-center overlays over live TV. -->
+<window>
+    <visible>false</visible>
+    <controls />
+</window>
+"""
+
 # Kodi and add-on toasts ("Loaded 5 channels", update hints, PVR import
 # notices) are technical messages for a TV viewer. The window stays defined
 # so Kodi can open and close it, but renders nothing.
@@ -268,3 +306,5 @@ def write_windows(xml_dir: Path):
     (xml_dir / "VideoFullScreen.xml").write_text(FULLSCREEN, encoding="utf-8")
     (xml_dir / "Home.xml").write_text(HOME, encoding="utf-8")
     (xml_dir / "DialogNotification.xml").write_text(NOTIFICATION, encoding="utf-8")
+    (xml_dir / "DialogSeekBar.xml").write_text(SEEKBAR, encoding="utf-8")
+    (xml_dir / "Custom_1109_TopBarOverlay.xml").write_text(EMPTY_OVERLAY, encoding="utf-8")
