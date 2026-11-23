@@ -93,6 +93,14 @@ jobs:
           assert top.findtext("visible") == "false" and not list(top.find("controls"))
           assert "$INFO[VideoPlayer.ChannelNumberLabel]" in full_labels
           assert "$INFO[VideoPlayer.ChannelName]" in full_labels
+          # Setup card (address + one-time code) on TV and Home, only while set.
+          for window in ("VideoFullScreen.xml", "Home.xml"):
+              root = ET.parse(base/"xml"/window).getroot()
+              cards = [g for g in root.iter("control")
+                       if g.findtext("visible") == "!String.IsEmpty(Window(Home).Property(dede.setup.code))"]
+              assert len(cards) == 1, window
+              labels = " ".join(x.text or "" for x in cards[0].iter("label"))
+              assert "Property(dede.setup.url)" in labels and "Property(dede.setup.code)" in labels
           # "Jetzt / Danach" only when the channel has a programme guide.
           guide = [c for c in full.iter("control") if "VideoPlayer.NextTitle" in (c.findtext("label") or "")]
           assert len(guide) == 1 and guide[0].findtext("visible") == "VideoPlayer.HasEpg"

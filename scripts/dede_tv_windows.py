@@ -228,6 +228,41 @@ SEEKBAR = f"""<?xml version="1.0" encoding="UTF-8"?>
 """
 
 
+# Setup card while the administration has no password yet: address and
+# one-time code, published by the service.dede-setup add-on. Kept clear of
+# the picture's sample regions used by the QEMU tests (top right corner).
+def _setup_card():
+    return f"""
+        <control type="group">
+            <visible>!String.IsEmpty(Window(Home).Property(dede.setup.code))</visible>
+            <left>920</left><top>40</top>
+            <control type="image">
+                <left>0</left><top>0</top><width>560</width><height>280</height>
+                {_texture("panel.png", PANEL)}
+            </control>
+            <control type="label">
+                <left>36</left><top>24</top><width>500</width><height>50</height>
+                <font>font32</font><textcolor>{ACCENT}</textcolor>
+                <label>[B]Einrichtung[/B]</label>
+            </control>
+            <control type="label">
+                <left>36</left><top>78</top><width>500</width><height>44</height>
+                <font>font13</font><textcolor>{TEXT_DIM}</textcolor>
+                <label>Am Handy oder PC öffnen:</label>
+            </control>
+            <control type="label">
+                <left>36</left><top>118</top><width>500</width><height>56</height>
+                <font>font32</font><textcolor>{TEXT}</textcolor>
+                <label>$INFO[Window(Home).Property(dede.setup.url)]</label>
+            </control>
+            <control type="label">
+                <left>36</left><top>186</top><width>500</width><height>70</height>
+                <font>font45</font><textcolor>{TEXT}</textcolor>
+                <label>Code: [B]$INFO[Window(Home).Property(dede.setup.code)][/B]</label>
+            </control>
+        </control>"""
+
+
 FULLSCREEN = f"""<?xml version="1.0" encoding="UTF-8"?>
 <!-- Dede TV full-screen TV: picture only, plus a loading indicator. -->
 <window>
@@ -244,7 +279,7 @@ FULLSCREEN = f"""<?xml version="1.0" encoding="UTF-8"?>
                 <align>center</align><aligny>center</aligny>
                 <label>Sender wird geladen …</label>
             </control>
-        </control>
+        </control>{_setup_card()}
     </controls>
 </window>
 """
@@ -321,7 +356,7 @@ HOME = f"""<?xml version="1.0" encoding="UTF-8"?>
                 <font>font30_title</font><textcolor>{TEXT_DIM}</textcolor>
                 <label>Die Senderliste wird gerade geladen oder ist noch nicht eingerichtet. Bitte den Administrator kontaktieren, falls dies so bleibt.</label>
             </control>
-        </control>
+        </control>{_setup_card()}
     </controls>
 </window>
 """
