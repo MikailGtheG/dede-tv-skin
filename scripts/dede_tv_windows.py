@@ -279,7 +279,7 @@ FULLSCREEN = f"""<?xml version="1.0" encoding="UTF-8"?>
                 <align>center</align><aligny>center</aligny>
                 <label>Sender wird geladen …</label>
             </control>
-        </control>{_setup_card()}
+        </control>
     </controls>
 </window>
 """
@@ -356,19 +356,23 @@ HOME = f"""<?xml version="1.0" encoding="UTF-8"?>
                 <font>font30_title</font><textcolor>{TEXT_DIM}</textcolor>
                 <label>Die Senderliste wird gerade geladen oder ist noch nicht eingerichtet. Bitte den Administrator kontaktieren, falls dies so bleibt.</label>
             </control>
-        </control>{_setup_card()}
+        </control>
     </controls>
 </window>
 """
 
 
 # Estuary's clock/"ends at" bar over full-screen video.
-EMPTY_OVERLAY = """<?xml version="1.0" encoding="UTF-8"?>
-<!-- Dede TV: no media-center overlays over live TV. Custom windows need
-     their id, or Kodi rejects the file. -->
+# Estuary's top bar slot (custom dialog 1109) is reused for the setup card:
+# Kodi shows such auto-visible dialogs over full-screen video and Home alike,
+# while controls inside VideoFullScreen did not appear over the picture.
+SETUP_OVERLAY = f"""<?xml version="1.0" encoding="UTF-8"?>
+<!-- Dede TV: setup card only; no media-center overlays over live TV.
+     Custom windows need their id, or Kodi rejects the file. -->
 <window type="dialog" id="1109">
-    <visible>false</visible>
-    <controls />
+    <visible>!String.IsEmpty(Window(Home).Property(dede.setup.code))</visible>
+    <controls>{_setup_card()}
+    </controls>
 </window>
 """
 
@@ -390,4 +394,4 @@ def write_windows(xml_dir: Path):
     (xml_dir / "Home.xml").write_text(HOME, encoding="utf-8")
     (xml_dir / "DialogNotification.xml").write_text(NOTIFICATION, encoding="utf-8")
     (xml_dir / "DialogSeekBar.xml").write_text(SEEKBAR, encoding="utf-8")
-    (xml_dir / "Custom_1109_TopBarOverlay.xml").write_text(EMPTY_OVERLAY, encoding="utf-8")
+    (xml_dir / "Custom_1109_TopBarOverlay.xml").write_text(SETUP_OVERLAY, encoding="utf-8")
