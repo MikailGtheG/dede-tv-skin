@@ -93,6 +93,9 @@ jobs:
           assert top.findtext("visible") == "false" and not list(top.find("controls"))
           assert "$INFO[VideoPlayer.ChannelNumberLabel]" in full_labels
           assert "$INFO[VideoPlayer.ChannelName]" in full_labels
+          # "Jetzt / Danach" only when the channel has a programme guide.
+          guide = [c for c in full.iter("control") if "VideoPlayer.NextTitle" in (c.findtext("label") or "")]
+          assert len(guide) == 1 and guide[0].findtext("visible") == "VideoPlayer.HasEpg"
           # Every window this skin defines may only open the channel list.
           for window in base.joinpath("xml").glob("*.xml"):
               if window.name not in {"DialogPVRChannelsOSD.xml", "VideoFullScreen.xml", "Home.xml"}:
