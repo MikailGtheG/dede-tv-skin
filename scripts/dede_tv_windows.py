@@ -207,7 +207,7 @@ SEEKBAR = f"""<?xml version="1.0" encoding="UTF-8"?>
                 <visible>VideoPlayer.HasEpg</visible>
                 <left>130</left><top>922</top><width>1400</width><height>56</height>
                 <font>font32</font><textcolor>{TEXT_DIM}</textcolor><aligny>center</aligny>
-                <label>$INFO[VideoPlayer.Title,Jetzt: ]$INFO[VideoPlayer.NextTitle,   ·   Danach: ]</label>
+                <label>$INFO[Player.Title,Jetzt: ]$INFO[VideoPlayer.NextTitle,   ·   Danach: ]</label>
             </control>{_key_hint(800, 990, "OK", 64, "Senderliste")}
         </control>
         <control type="group">
