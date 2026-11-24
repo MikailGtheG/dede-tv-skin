@@ -263,22 +263,30 @@ def _setup_card():
         </control>"""
 
 
-FULLSCREEN = f"""<?xml version="1.0" encoding="UTF-8"?>
-<!-- Dede TV full-screen TV: picture only, plus a loading indicator. -->
+FULLSCREEN = """<?xml version="1.0" encoding="UTF-8"?>
+<!-- Dede TV full-screen TV: picture only. Controls placed here are not drawn
+     over the picture; overlays live in auto-visible dialogs instead. -->
 <window>
+    <controls />
+</window>
+"""
+
+# Loading indicator while a channel starts, as an auto-visible dialog so it
+# is drawn over the (still black) picture.
+LOADING_OVERLAY = f"""<?xml version="1.0" encoding="UTF-8"?>
+<!-- Dede TV: "loading" pill while a channel starts. -->
+<window type="dialog" id="1110">
+    <visible>Window.IsActive(fullscreenvideo) + [Player.Caching | [Player.HasMedia + !Player.HasVideo]]</visible>
     <controls>
-        <control type="group">
-            <visible>Player.Caching | [Player.HasMedia + !Player.HasVideo]</visible>
-            <control type="image">
-                <left>660</left><top>480</top><width>600</width><height>120</height>
-                {_texture("pill.png", "D91C1D20")}
-            </control>
-            <control type="label">
-                <left>660</left><top>480</top><width>600</width><height>120</height>
-                <font>font37</font><textcolor>{TEXT}</textcolor>
-                <align>center</align><aligny>center</aligny>
-                <label>Sender wird geladen …</label>
-            </control>
+        <control type="image">
+            <left>660</left><top>480</top><width>600</width><height>120</height>
+            {_texture("pill.png", "D91C1D20")}
+        </control>
+        <control type="label">
+            <left>660</left><top>480</top><width>600</width><height>120</height>
+            <font>font37</font><textcolor>{TEXT}</textcolor>
+            <align>center</align><aligny>center</aligny>
+            <label>Sender wird geladen …</label>
         </control>
     </controls>
 </window>
@@ -395,3 +403,4 @@ def write_windows(xml_dir: Path):
     (xml_dir / "DialogNotification.xml").write_text(NOTIFICATION, encoding="utf-8")
     (xml_dir / "DialogSeekBar.xml").write_text(SEEKBAR, encoding="utf-8")
     (xml_dir / "Custom_1109_TopBarOverlay.xml").write_text(SETUP_OVERLAY, encoding="utf-8")
+    (xml_dir / "Custom_1110_DedeLoading.xml").write_text(LOADING_OVERLAY, encoding="utf-8")

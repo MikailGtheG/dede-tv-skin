@@ -86,7 +86,8 @@ jobs:
           # function calls like Window.IsActive(x) may use parentheses.
           import re
           for window in ("DialogPVRChannelsOSD.xml", "DialogSeekBar.xml", "VideoFullScreen.xml",
-                         "Home.xml", "Custom_1109_TopBarOverlay.xml", "DialogNotification.xml"):
+                         "Home.xml", "Custom_1109_TopBarOverlay.xml", "Custom_1110_DedeLoading.xml",
+                         "DialogNotification.xml"):
               for node in ET.parse(base/"xml"/window).getroot().iter("visible"):
                   bare, previous = node.text or "", None
                   while bare != previous:  # nested calls: Window(Home).Property(x)
@@ -100,6 +101,13 @@ jobs:
           assert overlay.findtext("visible") == "!String.IsEmpty(Window(Home).Property(dede.setup.code))"
           labels = " ".join(x.text or "" for x in overlay.iter("label"))
           assert "Property(dede.setup.url)" in labels and "Property(dede.setup.code)" in labels
+          # Overlays over the picture must be dialogs: VideoFullScreen's own
+          # controls are not drawn over video.
+          assert not list(ET.parse(base/"xml"/"VideoFullScreen.xml").getroot().iter("control"))
+          loading = ET.parse(base/"xml"/"Custom_1110_DedeLoading.xml").getroot()
+          assert loading.get("id") == "1110" and loading.get("type") == "dialog"
+          assert "Player.Caching" in loading.findtext("visible")
+          assert "Sender wird geladen" in " ".join(x.text or "" for x in loading.iter("label"))
           # "Jetzt / Danach" only when the channel has a programme guide.
           guide = [c for c in full.iter("control") if "VideoPlayer.NextTitle" in (c.findtext("label") or "")]
           assert len(guide) == 1 and guide[0].findtext("visible") == "VideoPlayer.HasEpg"
