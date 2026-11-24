@@ -4,7 +4,8 @@ Layout follows the product vision (1920x1080 skin coordinates):
   * channel list: dark rounded panel on the left, the live picture stays
     visible on the right; current row is a light "pill" with dark text;
     key hints in the footer.
-  * channel banner on switch: "03 | Kanal D" bottom left plus "OK" hint.
+  * channel banner on switch: "03 | Kanal D" bottom left plus "OK" hint,
+    with "Jetzt / Danach" from the programme guide when there is one.
 Textures are generated here (white RGBA shapes, tinted via colordiffuse),
 so no third-party artwork is shipped.
 """
@@ -201,6 +202,12 @@ SEEKBAR = f"""<?xml version="1.0" encoding="UTF-8"?>
                 <left>340</left><top>800</top><width>400</width><height>116</height>
                 <font>font52_title</font><textcolor>{TEXT}</textcolor><aligny>center</aligny>
                 <label>$INFO[VideoPlayer.ChannelName]</label>
+            </control>
+            <control type="label">
+                <visible>VideoPlayer.HasEpg</visible>
+                <left>130</left><top>922</top><width>1400</width><height>56</height>
+                <font>font32</font><textcolor>{TEXT_DIM}</textcolor><aligny>center</aligny>
+                <label>$INFO[Player.Title,Jetzt: ]$INFO[VideoPlayer.NextTitle,   ·   Danach: ]</label>
             </control>{_key_hint(800, 990, "OK", 64, "Senderliste")}
         </control>
         <control type="group">
