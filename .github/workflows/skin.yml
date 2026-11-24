@@ -58,12 +58,47 @@ jobs:
               assert a.is_file() and b.is_file() and a.read_bytes() == b.read_bytes()
 
           # Verify the intended remote-control layout rather than XML syntax alone.
-          overlay=(base/"xml"/"DialogPVRChannelsOSD.xml").read_text()
-          assert 'name="width" value="800"' in overlay
-          assert "<width>720</width>" in overlay
-          assert "<focusposition>2</focusposition>" in overlay
-          assert "<label>DEDE TV  |  SENDER</label>" in overlay
-          assert '<scrolltime tween="cubic" easing="out">200</scrolltime>' in overlay
+          pvr_list = pvr.find(".//control[@id='11']")
+          assert pvr_list.get("type") == "list"
+          for edge in ("onleft", "onright"):
+              # No hidden path from the channel list into channel groups/menus.
+              assert pvr_list.findtext(edge) == "11"
+          labels = [x.text or "" for x in pvr.iter("label")]
+          assert "Sender" in labels and "[B]Dede[/B] TV OS" in labels
+          assert any("ListItem.ChannelNumberLabel" in x for x in labels)
+          assert pvr.find(".//control[@type='image']") is not None
+          for texture in ("panel.png", "pill.png", "key.png", "line.png"):
+              data = (base/"media"/"dede"/texture).read_bytes()
+              assert data.startswith(b"\x89PNG\r\n\x1a\n"), texture
+          toast = ET.parse(base/"xml"/"DialogNotification.xml").getroot()
+          assert toast.findtext("visible") == "false" and not list(toast.find("controls"))
+          full = ET.parse(base/"xml"/"DialogSeekBar.xml").getroot()
+          full_labels = [x.text or "" for x in full.iter("label")]
+          # The playing channel's row is drawn with selectedcolor; it must
+          # stay readable on the light focus pill.
+          focused = pvr_list.find("focusedlayout")
+          for label in focused.iter("control"):
+              if label.get("type") == "label":
+                  assert label.findtext("selectedcolor") == label.findtext("textcolor")
+          top = ET.parse(base/"xml"/"Custom_1109_TopBarOverlay.xml").getroot()
+          assert top.get("id") == "1109" and top.get("type") == "dialog"
+          # Kodi groups boolean conditions with [ ], never ( ); only
+          # function calls like Window.IsActive(x) may use parentheses.
+          import re
+          for window in ("DialogPVRChannelsOSD.xml", "DialogSeekBar.xml", "VideoFullScreen.xml",
+                         "Home.xml", "Custom_1109_TopBarOverlay.xml", "DialogNotification.xml"):
+              for node in ET.parse(base/"xml"/window).getroot().iter("visible"):
+                  bare = re.sub(r"[A-Za-z.]+\([^()]*\)", "X", node.text or "")
+                  assert "(" not in bare and ")" not in bare, (window, node.text)
+          assert top.findtext("visible") == "false" and not list(top.find("controls"))
+          assert "$INFO[VideoPlayer.ChannelNumberLabel]" in full_labels
+          assert "$INFO[VideoPlayer.ChannelName]" in full_labels
+          # Every window this skin defines may only open the channel list.
+          for window in base.joinpath("xml").glob("*.xml"):
+              if window.name not in {"DialogPVRChannelsOSD.xml", "VideoFullScreen.xml", "Home.xml"}:
+                  continue
+              for node in ET.parse(window).getroot().iter("onclick"):
+                  assert node.text == "ActivateWindow(PVROSDChannels)", (window.name, node.text)
           colors=ET.parse(base/"colors"/"defaults.xml").getroot()
           color_map={n.get("name"):n.text for n in colors.findall("color")}
           assert color_map["blue"]=="FFD5D9DF"
@@ -73,15 +108,19 @@ jobs:
           original=ET.parse(Path("kodi/addons/skin.estuary/addon.xml")).getroot()
           assert original.get("id")=="skin.estuary"
           home=ET.parse(base/"xml"/"Home.xml").getroot()
-          controls=home.findall(".//control")
-          assert len(controls) <= 8, "Stock Estuary home elements leaked into TV-first home"
-          actions=[v.text for v in home.findall(".//onclick")]
-          assert "ActivateWindow(TVChannels)" in actions
-          labels=[x.text for x in home.findall(".//label")]
-          assert "DEDE TV" in labels
-          assert "Live-TV und Sender" in labels
+          # Home is the no-picture screen: its own PVR channel list (Kodi's
+          # channel-list dialog stays empty while nothing plays).
+          home_list = home.find(".//control[@id='50']")
+          assert home_list is not None and home_list.get("type") == "list"
+          assert home_list.findtext("content") == "pvr://channels/tv/*"
+          assert home.findtext("defaultcontrol") == "50"
+          assert home.findall(".//onclick") == [], "Home must not open Kodi windows"
+          labels=[x.text or "" for x in home.iter("label")]
+          assert "Fernsehen wird verbunden …" in labels
+          assert any("anderen Sender" in x for x in labels)
           assert home.findtext("backgroundcolor") == "background"
-          assert not any("ActivateWindow(Settings)" in (a or "") for a in actions)
+          confirm=(base/"xml"/"DialogConfirm.xml").read_text()
+          assert "!String.IsEqual(Control.GetLabel(1),$LOCALIZE[16026])" in confirm
           PY
           tar -C dede/dist -czf dede/dede-tv-skin-prototype.tar.gz skin.dede-tv
       - uses: actions/upload-artifact@v4
