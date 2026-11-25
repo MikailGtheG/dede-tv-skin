@@ -11,7 +11,7 @@ from pathlib import Path
 import shutil
 import xml.etree.ElementTree as ET
 
-from dede_tv_windows import write_textures, write_windows
+from dede_tv_windows import write_strings, write_textures, write_windows
 
 
 def replace_exact(text: str, original: str, replacement: str) -> str:
@@ -63,6 +63,7 @@ def build(upstream: Path, destination: Path) -> None:
     # list Kodi's CGUIDialogPVRChannelsOSD binds to.
     write_windows(destination / "xml")
     write_textures(destination / "media")
+    write_strings(destination / "language")
     # Kodi's modal "Playback failed" dialog (heading string 16026) is
     # technical; dede-tv-guard closes it at once and Home explains the
     # situation instead. Keep it invisible meanwhile. Other confirmation

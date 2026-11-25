@@ -80,6 +80,47 @@ def _texture(name, color, extra=""):
     return f'<texture border="{border}" colordiffuse="{color}"{extra}>dede/{name}</texture>'
 
 
+# Texts shown on the TV, as Kodi string ids (skin range 32100+): English
+# source text, German and Turkish translations.
+STRINGS = {
+    32100: ('Channels', 'Sender', 'Kanallar'),
+    32101: ('Select', 'Auswählen', 'Seç'),
+    32102: ('Watch', 'Ansehen', 'İzle'),
+    32103: ('Back', 'Zurück', 'Geri'),
+    32104: ('Close', 'Schließen', 'Kapat'),
+    32105: ('Channel list', 'Senderliste', 'Kanal listesi'),
+    32106: ('Now: ', 'Jetzt: ', 'Şimdi: '),
+    32107: ('   ·   Next: ', '   ·   Danach: ', '   ·   Sonra: '),
+    32108: ('Setup', 'Einrichtung', 'Kurulum'),
+    32109: ('Open on a phone or PC:', 'Am Handy oder PC öffnen:', 'Telefonda veya bilgisayarda açın:'),
+    32110: ('Code:', 'Code:', 'Kod:'),
+    32111: ('Loading channel …', 'Sender wird geladen …', 'Kanal yükleniyor …'),
+    32112: ('Connecting TV …', 'Fernsehen wird verbunden …', 'Televizyon bağlanıyor …'),
+    32113: ('Please wait a moment, it retries automatically.[CR][CR]With ▲ ▼ and OK you can also choose another channel.', 'Bitte einen Moment Geduld, es wird automatisch erneut versucht.[CR][CR]Mit ▲ ▼ und OK können Sie auch einen anderen Sender wählen.', 'Lütfen biraz bekleyin, otomatik olarak yeniden deneniyor.[CR][CR]▲ ▼ ve OK ile başka bir kanal da seçebilirsiniz.'),
+    32114: ('No channels yet', 'Noch keine Sender', 'Henüz kanal yok'),
+    32115: ('The channel list is loading or not set up yet. Please contact the administrator if this stays.', 'Die Senderliste wird gerade geladen oder ist noch nicht eingerichtet. Bitte den Administrator kontaktieren, falls dies so bleibt.', 'Kanal listesi yükleniyor veya henüz kurulmadı. Bu durum sürerse lütfen yöneticiye başvurun.'),
+}
+
+LANGUAGES = {"resource.language.en_gb": 0, "resource.language.de_de": 1, "resource.language.tr_tr": 2}
+
+
+def _po_quote(text):
+    return text.replace("\\", "\\\\").replace('"', '\\"')
+
+
+def write_strings(language_dir):
+    """Append Dede TV's strings to the skin's en_gb, de_de and tr_tr catalogues."""
+    for language, column in LANGUAGES.items():
+        po = language_dir / language / "strings.po"
+        text = po.read_text(encoding="utf-8")
+        if 'msgctxt "#32100"' in text:
+            raise ValueError(f"{po}: string id 32100 already used upstream")
+        entries = []
+        for number, texts in STRINGS.items():
+            msgstr = "" if column == 0 else _po_quote(texts[column])
+            entries.append(f'msgctxt "#{number}"\nmsgid "{_po_quote(texts[0])}"\nmsgstr "{msgstr}"\n')
+        po.write_text(text.rstrip("\n") + "\n\n# Dede TV\n\n" + "\n".join(entries), encoding="utf-8")
+
 def _key_hint(left, top, key, key_width, text):
     return f"""
             <control type="image">
@@ -148,7 +189,7 @@ CHANNEL_LIST = f"""<?xml version="1.0" encoding="UTF-8"?>
             <control type="label">
                 <left>64</left><top>118</top><width>700</width><height>110</height>
                 <font>font52_title</font><textcolor>{TEXT}</textcolor>
-                <label>Sender</label>
+                <label>$LOCALIZE[32100]</label>
             </control>
             <control type="list" id="11">
                 <left>30</left><top>248</top><width>760</width><height>672</height>
@@ -162,7 +203,7 @@ CHANNEL_LIST = f"""<?xml version="1.0" encoding="UTF-8"?>
             <control type="image">
                 <left>40</left><top>928</top><width>740</width><height>2</height>
                 {_texture("line.png", "33EDE6DC")}
-            </control>{_key_hint(48, 944, "▲ ▼", 84, "Auswählen")}{_key_hint(318, 944, "OK", 64, "Ansehen")}{_key_hint(546, 944, "Zurück", 100, "Schließen")}
+            </control>{_key_hint(48, 944, "▲ ▼", 84, "$LOCALIZE[32101]")}{_key_hint(318, 944, "OK", 64, "$LOCALIZE[32102]")}{_key_hint(546, 944, "$LOCALIZE[32103]", 100, "$LOCALIZE[32104]")}
         </control>
         <include>PVRChannelNumberInput</include>
     </controls>
@@ -207,8 +248,8 @@ SEEKBAR = f"""<?xml version="1.0" encoding="UTF-8"?>
                 <visible>VideoPlayer.HasEpg</visible>
                 <left>130</left><top>922</top><width>1400</width><height>56</height>
                 <font>font32</font><textcolor>{TEXT_DIM}</textcolor><aligny>center</aligny>
-                <label>$INFO[Player.Title,Jetzt: ]$INFO[VideoPlayer.NextTitle,   ·   Danach: ]</label>
-            </control>{_key_hint(800, 990, "OK", 64, "Senderliste")}
+                <label>$INFO[Player.Title,$LOCALIZE[32106]]$INFO[VideoPlayer.NextTitle,$LOCALIZE[32107]]</label>
+            </control>{_key_hint(800, 990, "OK", 64, "$LOCALIZE[32105]")}
         </control>
         <control type="group">
             <visible>!String.IsEmpty(PVR.ChannelNumberInput)</visible>
@@ -243,12 +284,12 @@ def _setup_card():
             <control type="label">
                 <left>36</left><top>24</top><width>500</width><height>50</height>
                 <font>font32</font><textcolor>{ACCENT}</textcolor>
-                <label>[B]Einrichtung[/B]</label>
+                <label>[B]$LOCALIZE[32108][/B]</label>
             </control>
             <control type="label">
                 <left>36</left><top>78</top><width>500</width><height>44</height>
                 <font>font13</font><textcolor>{TEXT_DIM}</textcolor>
-                <label>Am Handy oder PC öffnen:</label>
+                <label>$LOCALIZE[32109]</label>
             </control>
             <control type="label">
                 <left>36</left><top>118</top><width>500</width><height>56</height>
@@ -258,7 +299,7 @@ def _setup_card():
             <control type="label">
                 <left>36</left><top>186</top><width>500</width><height>70</height>
                 <font>font45</font><textcolor>{TEXT}</textcolor>
-                <label>Code: [B]$INFO[Window(Home).Property(dede.setup.code)][/B]</label>
+                <label>$LOCALIZE[32110] [B]$INFO[Window(Home).Property(dede.setup.code)][/B]</label>
             </control>
         </control>"""
 
@@ -286,7 +327,7 @@ LOADING_OVERLAY = f"""<?xml version="1.0" encoding="UTF-8"?>
             <left>660</left><top>480</top><width>600</width><height>120</height>
             <font>font37</font><textcolor>{TEXT}</textcolor>
             <align>center</align><aligny>center</aligny>
-            <label>Sender wird geladen …</label>
+            <label>$LOCALIZE[32111]</label>
         </control>
     </controls>
 </window>
@@ -322,7 +363,7 @@ HOME = f"""<?xml version="1.0" encoding="UTF-8"?>
             <control type="label">
                 <left>64</left><top>118</top><width>700</width><height>110</height>
                 <font>font52_title</font><textcolor>{TEXT}</textcolor>
-                <label>Sender</label>
+                <label>$LOCALIZE[32100]</label>
             </control>
             <control type="list" id="50">
                 <left>30</left><top>248</top><width>760</width><height>672</height>
@@ -337,19 +378,19 @@ HOME = f"""<?xml version="1.0" encoding="UTF-8"?>
             <control type="image">
                 <left>40</left><top>928</top><width>740</width><height>2</height>
                 {_texture("line.png", "33EDE6DC")}
-            </control>{_key_hint(48, 944, "▲ ▼", 84, "Auswählen")}{_key_hint(318, 944, "OK", 64, "Ansehen")}
+            </control>{_key_hint(48, 944, "▲ ▼", 84, "$LOCALIZE[32101]")}{_key_hint(318, 944, "OK", 64, "$LOCALIZE[32102]")}
         </control>
         <control type="group">
             <visible>PVR.HasTVChannels</visible>
             <control type="label">
                 <left>1000</left><top>380</top><width>860</width><height>100</height>
                 <font>font52_title</font><textcolor>{TEXT}</textcolor>
-                <label>Fernsehen wird verbunden …</label>
+                <label>$LOCALIZE[32112]</label>
             </control>
             <control type="textbox">
                 <left>1004</left><top>500</top><width>820</width><height>240</height>
                 <font>font30_title</font><textcolor>{TEXT_DIM}</textcolor>
-                <label>Bitte einen Moment Geduld, es wird automatisch erneut versucht.[CR][CR]Mit ▲ ▼ und OK können Sie auch einen anderen Sender wählen.</label>
+                <label>$LOCALIZE[32113]</label>
             </control>
         </control>
         <control type="group">
@@ -357,12 +398,12 @@ HOME = f"""<?xml version="1.0" encoding="UTF-8"?>
             <control type="label">
                 <left>1000</left><top>380</top><width>860</width><height>100</height>
                 <font>font52_title</font><textcolor>{TEXT}</textcolor>
-                <label>Noch keine Sender</label>
+                <label>$LOCALIZE[32114]</label>
             </control>
             <control type="textbox">
                 <left>1004</left><top>500</top><width>820</width><height>200</height>
                 <font>font30_title</font><textcolor>{TEXT_DIM}</textcolor>
-                <label>Die Senderliste wird gerade geladen oder ist noch nicht eingerichtet. Bitte den Administrator kontaktieren, falls dies so bleibt.</label>
+                <label>$LOCALIZE[32115]</label>
             </control>
         </control>
     </controls>
