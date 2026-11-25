@@ -275,7 +275,7 @@ FULLSCREEN = """<?xml version="1.0" encoding="UTF-8"?>
 # is drawn over the (still black) picture.
 LOADING_OVERLAY = f"""<?xml version="1.0" encoding="UTF-8"?>
 <!-- Dede TV: "loading" pill while a channel starts. -->
-<window type="dialog" id="1110">
+<window type="dialog" id="1150">
     <visible>Window.IsActive(fullscreenvideo) + [Player.Caching | [Player.HasMedia + !Player.HasVideo]]</visible>
     <controls>
         <control type="image">
@@ -403,4 +403,4 @@ def write_windows(xml_dir: Path):
     (xml_dir / "DialogNotification.xml").write_text(NOTIFICATION, encoding="utf-8")
     (xml_dir / "DialogSeekBar.xml").write_text(SEEKBAR, encoding="utf-8")
     (xml_dir / "Custom_1109_TopBarOverlay.xml").write_text(SETUP_OVERLAY, encoding="utf-8")
-    (xml_dir / "Custom_1110_DedeLoading.xml").write_text(LOADING_OVERLAY, encoding="utf-8")
+    (xml_dir / "Custom_1150_DedeLoading.xml").write_text(LOADING_OVERLAY, encoding="utf-8")
