@@ -64,7 +64,7 @@ jobs:
               # No hidden path from the channel list into channel groups/menus.
               assert pvr_list.findtext(edge) == "11"
           labels = [x.text or "" for x in pvr.iter("label")]
-          assert "Sender" in labels and "[B]Dede[/B] TV OS" in labels
+          assert "$LOCALIZE[32100]" in labels and "[B]Dede[/B] TV OS" in labels
           assert any("ListItem.ChannelNumberLabel" in x for x in labels)
           assert pvr.find(".//control[@type='image']") is not None
           for texture in ("panel.png", "pill.png", "key.png", "line.png"):
@@ -113,13 +113,31 @@ jobs:
           loading = ET.parse(base/"xml"/"Custom_1150_DedeLoading.xml").getroot()
           assert loading.get("id") == "1150" and loading.get("type") == "dialog"
           assert "Player.Caching" in loading.findtext("visible")
-          assert "Sender wird geladen" in " ".join(x.text or "" for x in loading.iter("label"))
+          assert "$LOCALIZE[32111]" in " ".join(x.text or "" for x in loading.iter("label"))
+          # TV texts: Dede TV's string ids exist in English, German and Turkish,
+          # and every id used in our windows is defined.
+          import re as _re
+          catalogues = {}
+          for language in ("en_gb", "de_de", "tr_tr"):
+              po = (base/"language"/f"resource.language.{language}"/"strings.po").read_text(encoding="utf-8")
+              catalogues[language] = dict(_re.findall(r'msgctxt "#(321\d\d)"\nmsgid "[^"]*"\nmsgstr "([^"]*)"', po))
+          assert len(catalogues["en_gb"]) >= 16 and catalogues["en_gb"].keys() == catalogues["de_de"].keys() == catalogues["tr_tr"].keys()
+          assert all(catalogues["de_de"].values()) and all(catalogues["tr_tr"].values())
+          assert catalogues["de_de"]["32111"] == "Sender wird geladen …" and catalogues["tr_tr"]["32111"] == "Kanal yükleniyor …"
+          for window in ("DialogPVRChannelsOSD.xml", "DialogSeekBar.xml", "Home.xml",
+                         "Custom_1109_TopBarOverlay.xml", "Custom_1150_DedeLoading.xml"):
+              text = (base/"xml"/window).read_text(encoding="utf-8")
+              for used in _re.findall(r"\$LOCALIZE\[(32\d\d\d)\]", text):
+                  assert used in catalogues["en_gb"], (window, used)
+              # No German words left as literal labels on the TV.
+              for word in ("Sender wird", "Fernsehen", "Senderliste", "Einrichtung", "Auswählen"):
+                  assert word not in text, (window, word)
           # "Jetzt / Danach" only when the channel has a programme guide.
           guide = [c for c in full.iter("control") if "VideoPlayer.NextTitle" in (c.findtext("label") or "")]
           assert len(guide) == 1 and guide[0].findtext("visible") == "VideoPlayer.HasEpg"
           # VideoPlayer.Title is the stream's own title (the channel name for
           # plugin streams); Player.Title is the guide's current programme.
-          assert guide[0].findtext("label").startswith("$INFO[Player.Title,")
+          assert guide[0].findtext("label").startswith("$INFO[Player.Title,$LOCALIZE[32106]]")
           # Every window this skin defines may only open the channel list.
           for window in base.joinpath("xml").glob("*.xml"):
               if window.name not in {"DialogPVRChannelsOSD.xml", "VideoFullScreen.xml", "Home.xml"}:
@@ -143,8 +161,7 @@ jobs:
           assert home.findtext("defaultcontrol") == "50"
           assert home.findall(".//onclick") == [], "Home must not open Kodi windows"
           labels=[x.text or "" for x in home.iter("label")]
-          assert "Fernsehen wird verbunden …" in labels
-          assert any("anderen Sender" in x for x in labels)
+          assert "$LOCALIZE[32112]" in labels and "$LOCALIZE[32113]" in labels
           assert home.findtext("backgroundcolor") == "background"
           confirm=(base/"xml"/"DialogConfirm.xml").read_text()
           assert "!String.IsEqual(Control.GetLabel(1),$LOCALIZE[16026])" in confirm
